@@ -10,11 +10,6 @@ namespace LoafAndStranger.DataAccess
     public class LoafRepository
     {
         const string ConnectionString = "Server=localhost;Database=LoafAndStranger;Trusted_Connection=True;";
-        static List<Loaf> _loaves = new List<Loaf>
-        {
-            new Loaf { Id = 1, Price = 5.50m, Size = LoafSize.Medium, Sliced = true, Type = "Rye" },
-            new Loaf { Id = 3, Price = 2.50m, Size = LoafSize.Small, Sliced = false, Type = "French" }
-        };
 
         public List<Loaf> GetAll()
         {
@@ -51,9 +46,23 @@ namespace LoafAndStranger.DataAccess
 
         public void Add(Loaf loaf)
         {
-            var biggestExistingId = _loaves.Max(l => l.Id);
-            loaf.Id = biggestExistingId + 1;
-            _loaves.Add(loaf);
+            using var connection = new SqlConnection(ConnectionString);
+            connection.Open();
+
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"INSERT INTO[dbo].[Loaves] ([Size],[Type],[WeightInOunces],[Price],[Sliced])
+                                OUTPUT inserted.Id
+                                VALUES(@Size, @type, @weightInOunces, @Price, @Sliced)";
+
+            cmd.Parameters.AddWithValue("Size", loaf.Size);
+            cmd.Parameters.AddWithValue("type", loaf.Type);
+            cmd.Parameters.AddWithValue("weightInOunces", loaf.WeightInOunces);
+            cmd.Parameters.AddWithValue("Price", loaf.Price);
+            cmd.Parameters.AddWithValue("Sliced", loaf.Sliced);
+
+            var id = (int)cmd.ExecuteScalar();
+
+            loaf.Id = id;
         }
 
         public Loaf Get(int id)
@@ -85,8 +94,17 @@ namespace LoafAndStranger.DataAccess
 
         public void Remove(int id)
         {
-            var loafToRemove = Get(id);
-            _loaves.Remove(loafToRemove);
+            using var connection = new SqlConnection(ConnectionString);
+            connection.Open();
+
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"Delete
+                                from Loaves
+                                where Id = @id";
+
+            cmd.Parameters.AddWithValue("id", id);
+
+            cmd.ExecuteNonQuery();
         }
 
         private Loaf MapLoaf(SqlDataReader reader)
