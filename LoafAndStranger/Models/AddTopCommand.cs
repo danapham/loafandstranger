@@ -5,13 +5,8 @@ using System.Threading.Tasks;
 
 namespace LoafAndStranger.Models
 {
-    public class Top
+    public class AddTopCommand
     {
-        public int Id { get; set; }
         public int NumberOfSeats { get; set; }
-        public bool Occupied { get; set; }
-
-        //one-to-many relationship
-        public List<Stranger> Strangers { get; set; }
     }
 }
