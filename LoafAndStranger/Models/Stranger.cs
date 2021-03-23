@@ -12,5 +12,11 @@ namespace LoafAndStranger.Models
         public DateTime ArrivalDate { get; set; }
         public int TopId { get; set; }
         public int LoafId { get; set; }
+
+        //One-to-One
+        public Loaf Loaf { get; set; }
+
+        //One-to-One
+        public Top Top { get; set; }
     }
 }
