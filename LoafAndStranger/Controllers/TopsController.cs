@@ -1,4 +1,5 @@
 ﻿using LoafAndStranger.DataAccess;
+using LoafAndStranger.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -17,6 +18,14 @@ namespace LoafAndStranger.Controllers
         {
             _repo = new TopsRepository();
         }
+
+        [HttpPost]
+        public IActionResult AddTop(AddTopCommand command)
+        {
+            var newTop = _repo.Add(command.NumberOfSeats);
+            return Created($"/api/tops/{newTop.Id}", newTop);
+        }
+
         [HttpGet]
         public IActionResult GetAllTops()
         {
