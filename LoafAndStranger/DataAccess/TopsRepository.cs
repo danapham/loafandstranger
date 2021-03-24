@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using LoafAndStranger.Models;
 using Microsoft.Data.SqlClient;
 using Dapper;
+using Microsoft.EntityFrameworkCore;
 
 namespace LoafAndStranger.DataAccess
 {
@@ -19,7 +20,7 @@ namespace LoafAndStranger.DataAccess
         }
         public IEnumerable<Top> GetAll()
         {
-            return _db.Tops;
+            return _db.Tops.Include(t => t.Strangers).AsNoTracking();
         }
 
         public Top Add(int numberOfSeats)
