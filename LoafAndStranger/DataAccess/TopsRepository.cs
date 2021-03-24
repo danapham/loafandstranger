@@ -5,61 +5,32 @@ using System.Threading.Tasks;
 using LoafAndStranger.Models;
 using Microsoft.Data.SqlClient;
 using Dapper;
+using Microsoft.EntityFrameworkCore;
 
 namespace LoafAndStranger.DataAccess
 {
     public class TopsRepository
     {
         const string ConnectionString = "Server=localhost;Database=LoafAndStranger;Trusted_Connection=True;";
+        AppDbContext _db;
+
+        public TopsRepository(AppDbContext db)
+        {
+            _db = db;
+        }
         public IEnumerable<Top> GetAll()
         {
-            using var db = new SqlConnection(ConnectionString);
-            //var topsSql = @"Select *
-            //            From Tops";
-            //var strangersSql = @"select *
-            //                   from strangers
-            //                   where topId =@id";
-
-            //var tops = db.Query<Top>(topsSql);
-
-            //foreach (var top in tops)
-            //{
-            //    var relatedStrangers = db.Query<Stranger>(strangersSql, top);
-            //    top.Strangers = relatedStrangers.ToList();
-            //}
-
-            var topsSql = @"Select *
-                        From Tops";
-            var strangersSql = @"select *
-                               from strangers
-                               where topId is not null";
-
-            var tops = db.Query<Top>(topsSql);
-            var strangers = db.Query<Stranger>(strangersSql);
-
-            foreach (var top in tops)
-            {
-                top.Strangers = strangers.Where(s => s.TopId == top.Id).ToList();
-            }
-
-            //var groupedStrangers = strangers.GroupBy(s => s.TopId);
-
-            //foreach (var groupedStranger in groupedStrangers)
-            //{
-            //    tops.First(t => t.Id == groupedStranger.Key).Strangers = groupedStranger.ToList();
-            //}
-            return tops;
+            return _db.Tops.Include(t => t.Strangers).AsNoTracking();
         }
 
         public Top Add(int numberOfSeats)
         {
-            using var db = new SqlConnection(ConnectionString);
+            var top = new Top { NumberOfSeats = numberOfSeats };
 
-            var sql = @"INSERT INTO [dbo].[Tops] ([NumberOfSeats])
-                        OUTPUT inserted.*
-                        VALUES (@numberOfSeats)";
+            _db.Tops.Add(top);
+            _db.SaveChanges();
 
-            return db.QuerySingle<Top>(sql, new { numberOfSeats });
+            return top;
         }
     }
 }

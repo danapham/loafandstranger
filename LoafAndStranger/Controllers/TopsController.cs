@@ -14,9 +14,9 @@ namespace LoafAndStranger.Controllers
     public class TopsController : ControllerBase
     {
         TopsRepository _repo;
-        public TopsController()
+        public TopsController(TopsRepository repo)
         {
-            _repo = new TopsRepository();
+            _repo = repo;
         }
 
         [HttpPost]
