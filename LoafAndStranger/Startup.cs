@@ -27,7 +27,9 @@ namespace LoafAndStranger
         // This method gets called by the runtime. Use this method to add services to the Inversion of Control (IoC) Container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddControllers().AddNewtonsoftJson(options =>
+                options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+        );
             //services.AddTransient<IConfiguration>(); //everytime someone asks for an instance, asp.net instantiates a new one
             //services.AddScoped<IConfiguration>(); //the first time someone asks for an instance in a single request, asp.net instantiates a new one
             //services.AddSingleton<IConfiguration>(); //the first time while the application is running, asp.net creates a new instance
@@ -35,6 +37,7 @@ namespace LoafAndStranger
             services.AddSingleton(Configuration);
             services.AddTransient<StrangersRepository>();
             services.AddTransient<TopsRepository>();
+            services.AddTransient<LoafRepository>();
 
             services.AddDbContext<AppDbContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("LoafAndStranger")));
         }

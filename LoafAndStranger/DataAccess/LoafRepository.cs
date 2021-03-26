@@ -5,88 +5,57 @@ using System.Threading.Tasks;
 using LoafAndStranger.Models;
 using Microsoft.Data.SqlClient;
 using Dapper;
+using Microsoft.EntityFrameworkCore;
 
 namespace LoafAndStranger.DataAccess
 {
     public class LoafRepository
     {
-        const string ConnectionString = "Server=localhost;Database=LoafAndStranger;Trusted_Connection=True;";
+        AppDbContext _db;
 
-        public List<Loaf> GetAll()
+        public LoafRepository(AppDbContext db)
         {
-            //create a connection
-            using var db = new SqlConnection(ConnectionString);
-
-            //telling the command what you want to do
-            var sql = @"Select * 
-                        From Loaves";
-
-            return db.Query<Loaf>(sql).ToList();
+            _db = db;
         }
+
+        public List<Loaf> GetAll() => _db.Loaves.ToList();
+
 
         public void Add(Loaf loaf)
         {
-            var sql = @"INSERT INTO [Loaves] ([Size],[Type],[WeightInOunces],[Price],[Sliced])
-                        OUTPUT inserted.Id
-                        VALUES(@Size, @type, @weightInOunces, @Price, @Sliced)";
-
-            using var db = new SqlConnection(ConnectionString);
-
-            var id = db.ExecuteScalar<int>(sql, loaf);
-
-            loaf.Id = id;
+            _db.Loaves.Add(loaf);
+            _db.SaveChanges();
         }
 
         public Loaf Get(int id)
         {
-            var sql = @"Select *
-                        From Loaves
-                        where Id = @id";
-
-            //create a connection
-            using var db = new SqlConnection(ConnectionString);
-
-            var loaf = db.QueryFirstOrDefault<Loaf>(sql, new { id = id });
-
-            return loaf;
+            return _db.Loaves.Find(id);
         }
 
         public void Update(Loaf loaf)
         {
-            var sql = @"UPDATE Loaves
-                        SET Price = @price,
-                            Size = @size,
-                            WeightInOunces = @weightInOunces,
-                            Sliced = @sliced,
-                            Type = @type
-                        WHERE Id = @id";
+            //option 1: how ef wants you to do updates
+            //var existingLoaf = Get(loaf.Id); //get the thing to update
+            //existingLoaf.Sliced = loaf.Sliced; //change the required/updated fields
+            //// ...
 
-            using var db = new SqlConnection(ConnectionString);
+            //_db.SaveChanges(); //then save it
 
-            db.Execute(sql, loaf);
+            //this tells EF to take this loaf from the outside world and treat it like something it watched change.
+            _db.Loaves.Attach(loaf).State = EntityState.Modified;
+            _db.SaveChanges();
         }
 
         public void Slice(int id)
         {
-            var sql = @"UPDATE Loaves
-                        SET Sliced = 1
-                        WHERE Id = @id";
-
-            using var db = new SqlConnection(ConnectionString);
-
-            //anonymous type with implicit property naming
-            db.Execute(sql, new { id });
+            var loaf = Get(id);
+            loaf.Sliced = true;
+            _db.SaveChanges();
         }
 
         public void Remove(int id)
         {
-            var sql = @"Delete 
-                        from Loaves 
-                        where Id = @id";
-
-            using var db = new SqlConnection(ConnectionString);
-
-            db.Execute(sql, new { id });
+            _db.Loaves.Remove(Get(id));
         }
     }
 }

@@ -20,7 +20,12 @@ namespace LoafAndStranger.DataAccess
         }
         public IEnumerable<Top> GetAll()
         {
-            return _db.Tops.Include(t => t.Strangers).AsNoTracking();
+            _db.Database.GetDbConnection().Query<Top>("select * from tops");
+            return _db.Tops
+                .Include(t => t.Strangers)
+                .ThenInclude(s => s.Loaf)
+                //.Where(t => t.Strangers.Any(s => s.Loaf.Type == "Monkey Bread"))
+                .AsNoTracking();
         }
 
         public Top Add(int numberOfSeats)
